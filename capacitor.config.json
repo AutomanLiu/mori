@@ -1,0 +1,11 @@
+{
+  "appId": "com.nano.automan.mori",
+  "appName": "Mori",
+  "webDir": "dist",
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true
+    }
+  }
+}
