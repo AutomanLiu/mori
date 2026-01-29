@@ -1,15 +1,19 @@
+
 import { useState, useEffect } from "react";
-import { Settings, Zap } from "lucide-react";
-import { useLocalStorage } from "../../hooks/use-local-storage";
+import { Settings, Zap, BatteryCharging } from "lucide-react";
+import { useProfile } from "../../contexts/ProfileContext";
 import UrgencyTimer from "../UrgencyTimer";
-import { differenceInWeeks, differenceInDays, differenceInYears, addYears, parseISO } from "date-fns";
+import { addYears, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useTranslation } from "../../hooks/use-translation";
 
 export default function NeonDashboard() {
     const navigate = useNavigate();
-    const [dob] = useLocalStorage("lifebattery_dob", "");
-    const [lifespan] = useLocalStorage("lifebattery_lifespan", 80);
+    const { t } = useTranslation();
+    const { activeProfile } = useProfile();
+    const dob = activeProfile?.dob || "2000-01-01";
+    const lifespan = activeProfile?.lifespan || 80;
     const [stats, setStats] = useState({ percentage: 100 });
 
     useEffect(() => {
@@ -39,7 +43,7 @@ export default function NeonDashboard() {
             <header className="p-6 pt-safe-top flex justify-between items-center z-[101] pointer-events-none">
                 <div className="flex items-center gap-2">
                     <Zap className="w-5 h-5 text-[#d946ef]" />
-                    <span className="font-bold text-sm tracking-[0.3em] uppercase text-white shadow-[0_0_10px_#d946ef]">CyberLife</span>
+                    <span className="font-bold text-sm tracking-[0.3em] uppercase text-white shadow-[0_0_10px_#d946ef]">{activeProfile ? activeProfile.name : "CyberLife"}</span>
                 </div>
                 <button
                     onClick={() => navigate("/settings")}

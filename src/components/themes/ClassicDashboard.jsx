@@ -1,21 +1,29 @@
 import { useState, useEffect } from "react";
-import { Settings, Heart } from "lucide-react";
-import { useLocalStorage } from "../../hooks/use-local-storage";
+import { useProfile } from "../../contexts/ProfileContext";
+import { Settings, Share2, Battery as BatteryIcon, BatteryCharging, BatteryWarning, Info, Heart } from "lucide-react";
 import Battery from "../Battery";
 import UrgencyTimer from "../UrgencyTimer";
 import { differenceInWeeks, differenceInDays, differenceInYears, addYears, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "../../hooks/use-translation";
 
 export default function ClassicDashboard() {
     const navigate = useNavigate();
-    const [dob] = useLocalStorage("lifebattery_dob", "");
-    const [lifespan] = useLocalStorage("lifebattery_lifespan", 80);
+    const { t } = useTranslation();
+    const { activeProfile } = useProfile();
+
+    const dob = activeProfile?.dob || "2000-01-01";
+    const lifespan = activeProfile?.lifespan || 80;
 
     const [stats, setStats] = useState({
-        percentage: 100,
+        yearsPassed: 0,
+        weeksPassed: 0,
+        percentage: 0,
+        weeksTotal: 0,
+        weeksRemaining: 0,
+        yearsLeft: 0,
         weeksLeft: 0,
-        daysLeft: 0,
-        yearsLeft: 0
+        daysLeft: 0
     });
 
     useEffect(() => {
@@ -52,7 +60,7 @@ export default function ClassicDashboard() {
                     <div className="w-8 h-8 bg-neutral-800 rounded-full flex items-center justify-center">
                         <Heart className="w-4 h-4 text-white" />
                     </div>
-                    <span className="font-bold text-lg tracking-tight font-serif italic">Mori</span>
+                    <span className="font-bold text-lg tracking-tight font-serif italic">{activeProfile ? activeProfile.name : "Mori"}</span>
                 </div>
                 <button
                     onClick={() => navigate("/settings")}

@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
-import { Settings, Heart } from "lucide-react";
-import { useLocalStorage } from "../../hooks/use-local-storage";
+import { Settings, Droplets } from "lucide-react";
 import FluidBackground from "../FluidBackground";
 import UrgencyTimer from "../UrgencyTimer";
 import { differenceInWeeks, differenceInDays, differenceInYears, addYears, parseISO } from "date-fns";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "../../hooks/use-translation";
+import { useProfile } from "../../contexts/ProfileContext";
 
 export default function FluidDashboard() {
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const [dob] = useLocalStorage("lifebattery_dob", "");
-    const [lifespan] = useLocalStorage("lifebattery_lifespan", 80);
+    const { activeProfile } = useProfile();
+    const dob = activeProfile?.dob || "2000-01-01";
+    const lifespan = activeProfile?.lifespan || 80;
 
     const [stats, setStats] = useState({
         percentage: 100,
@@ -51,13 +52,16 @@ export default function FluidDashboard() {
     return (
         <FluidBackground percentage={stats.percentage}>
             {/* Header - Minimalist */}
-            <header className="absolute top-0 left-0 right-0 p-6 pt-safe-top flex justify-between items-center z-[101] pointer-events-none mix-blend-overlay">
-                <span className="font-bold text-sm tracking-widest uppercase opacity-80 text-white font-serif italic">Mori</span>
+            <header className="p-6 pt-safe-top flex justify-between items-center z-[101] pointer-events-none relative">
+                <div className="flex items-center gap-2">
+                    <Droplets className="w-5 h-5 text-white/80" />
+                    <span className="font-bold text-sm tracking-widest text-white/90 uppercase">{activeProfile ? activeProfile.name : "FLUID"}</span>
+                </div>
                 <button
                     onClick={() => navigate("/settings")}
-                    className="p-2 rounded-full hover:bg-white/10 transition-colors text-white pointer-events-auto"
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors pointer-events-auto backdrop-blur-sm"
                 >
-                    <Settings className="w-5 h-5" />
+                    <Settings className="w-5 h-5 text-white" />
                 </button>
             </header>
 

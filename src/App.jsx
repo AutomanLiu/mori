@@ -7,11 +7,11 @@ import SettingsPage from "./pages/Settings";
 import Layout from "./components/Layout";
 import IconDesign from "./pages/IconDesign";
 import SplashScreen from "./components/SplashScreen";
-import { useLocalStorage } from "./hooks/use-local-storage";
+import { useProfile } from "./contexts/ProfileContext";
 
 function PrivateRoute({ children }) {
-  const [dob] = useLocalStorage("lifebattery_dob", "");
-  return dob ? children : <Navigate to="/onboarding" />;
+  const { profiles } = useProfile();
+  return profiles.length > 0 ? children : <Navigate to="/onboarding" />;
 }
 
 export default function App() {

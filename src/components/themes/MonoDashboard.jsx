@@ -1,14 +1,18 @@
+
 import { useState, useEffect } from "react";
-import { Settings, BatteryMedium } from "lucide-react";
-import { useLocalStorage } from "../../hooks/use-local-storage";
-import UrgencyTimer from "../UrgencyTimer";
-import { differenceInWeeks, differenceInDays, differenceInYears, addYears, parseISO } from "date-fns";
+import { useProfile } from "../../contexts/ProfileContext";
+import { Settings, Circle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "../../hooks/use-translation";
+import UrgencyTimer from "../UrgencyTimer";
+import { addYears, parseISO } from "date-fns";
 
 export default function MonoDashboard() {
     const navigate = useNavigate();
-    const [dob] = useLocalStorage("lifebattery_dob", "");
-    const [lifespan] = useLocalStorage("lifebattery_lifespan", 80);
+    const { t } = useTranslation();
+    const { activeProfile } = useProfile();
+    const dob = activeProfile?.dob || "2000-01-01";
+    const lifespan = activeProfile?.lifespan || 80;
     const [stats, setStats] = useState({ percentage: 100 });
 
     useEffect(() => {
@@ -29,7 +33,7 @@ export default function MonoDashboard() {
                     <div className="bg-black text-white p-1">
                         <BatteryMedium className="w-4 h-4" />
                     </div>
-                    <span className="font-bold text-sm tracking-tight uppercase">Memento Mori</span>
+                    <span className="font-bold text-sm tracking-tight uppercase">{activeProfile ? activeProfile.name : "Memento Mori"}</span>
                 </div>
                 <button
                     onClick={() => navigate("/settings")}
@@ -50,7 +54,7 @@ export default function MonoDashboard() {
                     <div className="w-full h-4 border-2 border-black p-0.5">
                         <div
                             className="h-full bg-black transition-all duration-1000"
-                            style={{ width: `${stats.percentage}%` }}
+                            style={{ width: `${stats.percentage}% ` }}
                         />
                     </div>
                     <p className="text-right text-xs font-bold uppercase mt-2 tracking-widest">

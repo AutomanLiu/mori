@@ -2,14 +2,15 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Calendar, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useLocalStorage } from "../hooks/use-local-storage";
+import { useProfile } from "../contexts/ProfileContext";
 import { useTranslation } from "../hooks/use-translation";
 import { cn } from "../lib/utils";
 
 export default function Onboarding() {
     const [step, setStep] = useState(1);
-    const [dob, setDob] = useLocalStorage("lifebattery_dob", "");
-    const [lifespan, setLifespan] = useLocalStorage("lifebattery_lifespan", 80);
+    const [dob, setDob] = useState("");
+    const [lifespan, setLifespan] = useState(80);
+    const { addProfile } = useProfile();
     const { t } = useTranslation();
     const navigate = useNavigate();
 
@@ -17,6 +18,13 @@ export default function Onboarding() {
         if (step === 1 && dob) {
             setStep(2);
         } else if (step === 2 && lifespan) {
+            // Create the first profile ("Me")
+            addProfile({
+                name: "Me", // Or localized "Me"? Stick to "Me" or let user edit later.
+                type: "human",
+                dob: dob,
+                lifespan: lifespan
+            });
             navigate("/");
         }
     };
@@ -60,7 +68,7 @@ export default function Onboarding() {
 
                             <div className="space-y-4">
                                 <label className="block text-sm font-medium text-neutral-500 uppercase tracking-wider">
-                                    出生日期
+                                    {t("settings.dob")}
                                 </label>
                                 <input
                                     type="date"
@@ -107,8 +115,8 @@ export default function Onboarding() {
                             <div className="space-y-6">
                                 <div>
                                     <label className="block text-sm font-medium text-neutral-500 uppercase tracking-wider mb-4 flex justify-between">
-                                        <span>预期寿命</span>
-                                        <span className="text-white">{lifespan} 岁</span>
+                                        <span>{t("settings.lifespan")}</span>
+                                        <span className="text-white">{lifespan}</span>
                                     </label>
 
                                     <input

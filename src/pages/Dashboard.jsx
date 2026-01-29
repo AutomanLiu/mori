@@ -1,17 +1,25 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useLocalStorage } from "../hooks/use-local-storage";
+import { useSwipeable } from "react-swipeable";
+import { useProfile } from "../contexts/ProfileContext";
 import ClassicDashboard from "../components/themes/ClassicDashboard";
 import FluidDashboard from "../components/themes/FluidDashboard";
 import PixelDashboard from "../components/themes/PixelDashboard";
 import NeonDashboard from "../components/themes/NeonDashboard";
 import MonoDashboard from "../components/themes/MonoDashboard";
 import PastelDashboard from "../components/themes/PastelDashboard";
-import TopDrawer from "../components/TopDrawer";
+import TrisolaransDashboard from "../components/themes/TrisolaransDashboard";
 
 export default function Dashboard() {
-    const [theme] = useLocalStorage("lifebattery_theme", "classic");
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const { activeProfile, nextProfile, prevProfile } = useProfile();
+    const theme = activeProfile?.theme || "classic";
+
+    const handlers = useSwipeable({
+        onSwipedLeft: () => nextProfile(),
+        onSwipedRight: () => prevProfile(),
+        preventScrollOnSwipe: true,
+        trackMouse: true
+    });
 
     const renderDashboard = () => {
         switch (theme) {
@@ -25,6 +33,8 @@ export default function Dashboard() {
                 return <MonoDashboard />;
             case "pastel":
                 return <PastelDashboard />;
+            case "trisolarans":
+                return <TrisolaransDashboard />;
             case "fluid":
             default:
                 return <FluidDashboard />;
@@ -32,27 +42,10 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="relative h-full w-full overflow-hidden">
-            <motion.div
-                className="h-full w-full touch-pan-y"
-                onPanEnd={(e, info) => {
-                    // Detect downward swipe (Drag/Touch)
-                    if (info.offset.y > 50 && info.velocity.y > 0) {
-                        setIsDrawerOpen(true);
-                    }
-                }}
-                onWheel={(e) => {
-                    // Detect upward scroll / pull down (Trackpad/MouseWheel)
-                    // -deltaY means scrolling UP (pulling down content)
-                    if (e.deltaY < -30 && !isDrawerOpen) {
-                        setIsDrawerOpen(true);
-                    }
-                }}
-            >
+        <div {...handlers} className="relative h-full w-full overflow-hidden">
+            <motion.div className="h-full w-full touch-pan-y">
                 {renderDashboard()}
             </motion.div>
-
-            <TopDrawer isOpen={isDrawerOpen} setIsOpen={setIsDrawerOpen} />
         </div>
     );
 }

@@ -1,19 +1,50 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, ChevronRight, Globe, Palette, Clock, AlertTriangle, Lock, Sparkles, Star } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Globe, Palette, Clock, AlertTriangle, Lock, Sparkles, Star, Users, Plus, X } from "lucide-react";
 import { useLocalStorage } from "../hooks/use-local-storage";
 import { useTranslation, availableLanguages } from "../hooks/use-translation";
-import { motion } from "framer-motion";
+import { useProfile } from "../contexts/ProfileContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
+import Paywall from "../components/Paywall";
+import { motion, AnimatePresence } from "framer-motion";
 import { triggerHaptic } from "../utils/haptics";
 import { ImpactStyle } from "@capacitor/haptics";
+import { useState } from "react";
 
 export default function Settings() {
     const navigate = useNavigate();
     const { t, lang, setLang } = useTranslation();
+    const { activeProfile, updateProfile, profiles, addProfile, switchProfile, deleteProfile, activeProfileId } = useProfile();
 
-    const [theme, setTheme] = useLocalStorage("lifebattery_theme", "classic");
-    const [dob, setDob] = useLocalStorage("lifebattery_dob", "");
-    const [lifespan, setLifespan] = useLocalStorage("lifebattery_lifespan", 80);
-    const [isPro, setIsPro] = useLocalStorage("lifebattery_is_pro", false);
+    // Use profile data or fallbacks
+    const theme = activeProfile?.theme || "classic";
+    const dob = activeProfile?.dob || "";
+    const lifespan = activeProfile?.lifespan || 80;
+
+    // Pro state is global for the user, not per profile (usually)
+    // const [isPro, setIsPro] = useLocalStorage("lifebattery_is_pro", false);
+    const { isPro } = useSubscription();
+    const [showPaywall, setShowPaywall] = useState(false);
+    const [showAddProfile, setShowAddProfile] = useState(false);
+    const [newProfileName, setNewProfileName] = useState("");
+    const [newProfileType, setNewProfileType] = useState("human");
+
+    const setTheme = (newTheme) => {
+        if (activeProfile?.id) {
+            updateProfile(activeProfile.id, { theme: newTheme });
+        }
+    };
+
+    const setDob = (newDob) => {
+        if (activeProfile?.id) {
+            updateProfile(activeProfile.id, { dob: newDob });
+        }
+    };
+
+    const setLifespan = (newLifespan) => {
+        if (activeProfile?.id) {
+            updateProfile(activeProfile.id, { lifespan: newLifespan });
+        }
+    };
 
     const themes = [
         { id: "classic", gradient: "from-neutral-800 to-neutral-900", isPremium: false },
@@ -22,6 +53,7 @@ export default function Settings() {
         { id: "neon", gradient: "from-[#d946ef] to-[#050510]", isPremium: true },
         { id: "mono", gradient: "from-white to-neutral-200", isPremium: true },
         { id: "pastel", gradient: "from-[#fbcfe8] to-[#fde68a]", isPremium: true },
+        { id: "trisolarans", gradient: "from-black to-[#00FF00]", isPremium: true },
     ];
 
     const handleReset = () => {
@@ -43,6 +75,148 @@ export default function Settings() {
                 <h1 className="text-xl font-bold">{t("settings.title")}</h1>
             </header>
 
+            {/* Profiles Section */}
+            <section className="mb-8">
+                <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3 px-1">Profiles</h2>
+                <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+                    {profiles.map((profile, index) => (
+                        <div key={profile.id} className="relative group">
+                            <button
+                                onClick={() => {
+                                    switchProfile(profile.id);
+                                    triggerHaptic(ImpactStyle.Light);
+                                }}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all min-w-[140px] ${activeProfileId === profile.id
+                                    ? "bg-neutral-800 border-neutral-700 ring-1 ring-white/20"
+                                    : "bg-neutral-900 border-neutral-800 opacity-60"
+                                    }`}
+                            >
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center text-xs font-bold">
+                                    {profile.type === 'pet' ? '🐾' : profile.name[0].toUpperCase()}
+                                </div>
+                                <div className="text-left">
+                                    <div className="font-bold text-sm truncate w-20">{profile.name}</div>
+                                    <div className="text-[10px] text-neutral-400 capitalize">{t(`settings.${profile.type}`) || profile.type}</div>
+                                </div>
+                            </button>
+
+                            {/* Delete Button (Skip index 0 / Main) */}
+                            {index > 0 && (
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (confirm(t("settings.delete_confirm"))) {
+                                            deleteProfile(profile.id);
+                                            triggerHaptic(ImpactStyle.Medium);
+                                        }
+                                    }}
+                                    className="absolute top-1 right-1 bg-red-500 text-white p-2 rounded-full shadow-lg z-50 hover:bg-red-600 transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+                    ))}
+
+                    <button
+                        onClick={() => {
+                            setNewProfileName("");
+                            setNewProfileType("human");
+                            setShowAddProfile(true);
+                            triggerHaptic(ImpactStyle.Light);
+                        }}
+                        className="flex items-center justify-center w-12 h-[calc(3rem+24px)] rounded-2xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition-colors shrink-0"
+                    >
+                        <Plus className="w-5 h-5 text-neutral-400" />
+                    </button>
+                </div>
+            </section>
+
+            {/* Add Profile Modal */}
+            <AnimatePresence>
+                {showAddProfile && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-bold">{t("settings.profile_add")}</h3>
+                                <button
+                                    onClick={() => setShowAddProfile(false)}
+                                    className="p-1 rounded-full bg-neutral-800 text-neutral-400"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-6">
+                                {/* Name Input */}
+                                <div>
+                                    <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 block">{t("settings.profile_name")}</label>
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        value={newProfileName}
+                                        onChange={(e) => setNewProfileName(e.target.value)}
+                                        className="w-full bg-neutral-800 border-none rounded-xl px-4 py-3 text-white outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                    />
+                                </div>
+
+                                {/* Type Selection */}
+                                <div>
+                                    <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 block">{t("settings.profile_type")}</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => setNewProfileType("human")}
+                                            className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${newProfileType === "human"
+                                                ? "bg-emerald-500/10 border-emerald-500 text-emerald-500"
+                                                : "bg-neutral-800 border-neutral-800 text-neutral-400 hover:bg-neutral-700"}`}
+                                        >
+                                            <Users className="w-6 h-6" />
+                                            <span className="text-xs font-bold">{t("settings.human")}</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setNewProfileType("pet")}
+                                            className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${newProfileType === "pet"
+                                                ? "bg-emerald-500/10 border-emerald-500 text-emerald-500"
+                                                : "bg-neutral-800 border-neutral-800 text-neutral-400 hover:bg-neutral-700"}`}
+                                        >
+                                            {/* Paw Icon Mock using Text or SVGs? Let's use text for now or verify imports */}
+                                            <span className="text-2xl">🐾</span>
+                                            <span className="text-xs font-bold">{t("settings.pet")}</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button
+                                    disabled={!newProfileName.trim()}
+                                    onClick={() => {
+                                        if (newProfileName.trim()) {
+                                            const lifespan = newProfileType === "pet" ? 15 : 80;
+                                            addProfile({ name: newProfileName, type: newProfileType, lifespan, dob: "2024-01-01" });
+                                            setShowAddProfile(false);
+                                            triggerHaptic(ImpactStyle.Medium);
+                                        }
+                                    }}
+                                    className="w-full py-3 rounded-xl bg-white text-black font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-200 transition-colors"
+                                >
+                                    {t("settings.profile_add")}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* 1. Appearance Section (Themes) & Pro Banner */}
             {!isPro && (
                 <div className="mb-8 p-[1px] rounded-2xl bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200">
@@ -59,10 +233,8 @@ export default function Settings() {
 
                         <button
                             onClick={() => {
-                                if (confirm("Mock Payment: Unlock Pro for $1.00?")) {
-                                    setIsPro(true);
-                                    alert("Welcome to Pro! All themes unlocked.");
-                                }
+                                setShowPaywall(true);
+                                triggerHaptic(ImpactStyle.Medium);
                             }}
                             className="relative z-10 bg-amber-400 text-black px-4 py-2 rounded-xl font-bold text-sm hover:bg-amber-300 transition-colors shadow-lg shadow-amber-900/20"
                         >
@@ -92,7 +264,11 @@ export default function Settings() {
                                     key={themeOption.id}
                                     disabled={isLocked}
                                     onClick={() => {
-                                        if (isLocked) return;
+                                        if (isLocked) {
+                                            setShowPaywall(true);
+                                            triggerHaptic(ImpactStyle.Medium);
+                                            return;
+                                        }
                                         setTheme(themeOption.id);
                                         triggerHaptic(ImpactStyle.Medium);
                                     }}
@@ -230,6 +406,10 @@ export default function Settings() {
                     {t("settings.version")}
                 </div>
             </section>
+            {/* Paywall Overlay */}
+            <AnimatePresence>
+                {showPaywall && <Paywall onClose={() => setShowPaywall(false)} />}
+            </AnimatePresence>
         </div>
     );
 }

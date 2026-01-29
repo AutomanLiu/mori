@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, Check, Trash2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocalStorage } from "../hooks/use-local-storage";
+import { useProfile } from "../contexts/ProfileContext";
 import { useTranslation } from "../hooks/use-translation";
 import { triggerHaptic } from "../utils/haptics";
 import { ImpactStyle } from "@capacitor/haptics";
@@ -9,25 +9,29 @@ import { cn } from "../lib/utils";
 
 export default function Wishes() {
     const { t } = useTranslation();
-    const [wishes, setWishes] = useLocalStorage("lifebattery_wishes", []);
+    const { activeProfile, updateProfile } = useProfile();
+    const wishes = activeProfile?.wishes || [];
     const [newWish, setNewWish] = useState("");
     const [isAdding, setIsAdding] = useState(false);
 
     const addWish = (e) => {
         e.preventDefault();
         if (newWish.trim()) {
-            setWishes([{ id: Date.now(), text: newWish, completed: false }, ...wishes]);
+            const updatedWishes = [{ id: Date.now(), text: newWish, completed: false }, ...wishes];
+            updateProfile(activeProfile.id, { wishes: updatedWishes });
             setNewWish("");
             triggerHaptic(ImpactStyle.Medium);
         } setIsAdding(false);
     };
 
     const toggleWish = (id) => {
-        setWishes(wishes.map(w => w.id === id ? { ...w, completed: !w.completed } : w));
+        const updatedWishes = wishes.map(w => w.id === id ? { ...w, completed: !w.completed } : w);
+        updateProfile(activeProfile.id, { wishes: updatedWishes });
     };
 
     const deleteWish = (id) => {
-        setWishes(wishes.filter(w => w.id !== id));
+        const updatedWishes = wishes.filter(w => w.id !== id);
+        updateProfile(activeProfile.id, { wishes: updatedWishes });
     };
 
     const activeWishes = wishes.filter(w => !w.completed);

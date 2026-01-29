@@ -1,14 +1,18 @@
+
 import { useState, useEffect } from "react";
-import { Settings, Heart } from "lucide-react";
-import { useLocalStorage } from "../../hooks/use-local-storage";
+import { useProfile } from "../../contexts/ProfileContext";
+import { Settings, Gamepad2, Trophy } from "lucide-react";
 import UrgencyTimer from "../UrgencyTimer";
-import { differenceInWeeks, differenceInDays, differenceInYears, addYears, parseISO } from "date-fns";
+import { addYears, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "../../hooks/use-translation";
 
 export default function PixelDashboard() {
     const navigate = useNavigate();
-    const [dob] = useLocalStorage("lifebattery_dob", "");
-    const [lifespan] = useLocalStorage("lifebattery_lifespan", 80);
+    const { t } = useTranslation();
+    const { activeProfile } = useProfile();
+    const dob = activeProfile?.dob || "2000-01-01";
+    const lifespan = activeProfile?.lifespan || 80;
     const [stats, setStats] = useState({ percentage: 100 });
 
     useEffect(() => {
@@ -27,8 +31,9 @@ export default function PixelDashboard() {
         <div className="h-full bg-[#9bbc0f] text-[#0f380f] flex flex-col relative pb-safe-bottom font-mono">
             {/* Header */}
             <header className="p-6 pt-safe-top flex justify-between items-center z-[101] pointer-events-none">
-                <div className="flex items-center gap-2 border-2 border-[#0f380f] px-2 py-1 bg-[#8bac0f]">
-                    <span className="font-bold text-xs uppercase tracking-widest">LIFE_OS</span>
+                <div className="flex items-center gap-2">
+                    <Gamepad2 className="w-6 h-6 text-[#8bac0f]" />
+                    <span className="font-bold text-xl tracking-tighter text-[#0f380f] uppercase">{activeProfile ? activeProfile.name : "PLAYER 1"}</span>
                 </div>
                 <button
                     onClick={() => navigate("/settings")}
@@ -51,7 +56,7 @@ export default function PixelDashboard() {
                         {[...Array(10)].map((_, i) => (
                             <div
                                 key={i}
-                                className={`flex-1 ${stats.percentage > (i * 10) ? "bg-[#0f380f]" : "opacity-10 border border-[#0f380f]"}`}
+                                className={`flex - 1 ${stats.percentage > (i * 10) ? "bg-[#0f380f]" : "opacity-10 border border-[#0f380f]"} `}
                             />
                         ))}
                     </div>

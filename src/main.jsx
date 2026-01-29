@@ -1,10 +1,19 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
+import { ProfileProvider } from "./contexts/ProfileContext";
+import { SubscriptionProvider } from "./contexts/SubscriptionContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import App from "./App";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <SubscriptionProvider>
+        <ProfileProvider>
+          <App />
+        </ProfileProvider>
+      </SubscriptionProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )
