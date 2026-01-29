@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useProfile } from "../../contexts/ProfileContext";
-import { Settings, Share2, Battery as BatteryIcon, BatteryCharging, BatteryWarning, Info, Heart } from "lucide-react";
+import { Settings, Heart } from "lucide-react";
 import Battery from "../Battery";
 import UrgencyTimer from "../UrgencyTimer";
 import { differenceInWeeks, differenceInDays, differenceInYears, addYears, parseISO } from "date-fns";

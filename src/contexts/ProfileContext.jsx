@@ -74,7 +74,7 @@ export function ProfileProvider({ children }) {
 
     const activeProfile = profiles.find(p => p.id === activeProfileId) || profiles[0];
 
-    const addProfile = (profileData) => {
+    const addProfile = useCallback((profileData) => {
         const newProfile = {
             id: uuidv4(),
             createdAt: new Date().toISOString(),
@@ -85,49 +85,49 @@ export function ProfileProvider({ children }) {
         setProfiles(prev => [...prev, newProfile]);
         setActiveProfileId(newProfile.id); // Immediate switch okay
         return newProfile;
-    };
+    }, []);
 
-    const updateProfile = (id, updates) => {
+    const updateProfile = useCallback((id, updates) => {
         setProfiles(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-    };
+    }, []);
 
-    const deleteProfile = (id) => {
+    const deleteProfile = useCallback((id) => {
         setProfiles(prev => prev.filter(p => p.id !== id));
         // Active ID cleanup handled by useEffect
-    };
+    }, []);
 
-    const switchProfile = (id) => {
-        if (profiles.find(p => p.id === id)) {
-            setActiveProfileId(id);
-        }
-    };
+    const switchProfile = useCallback((id) => {
+        setActiveProfileId(id); // Since we read profiles inside useEffects or components, we just set ID here
+    }, []);
 
-    const nextProfile = () => {
+    const nextProfile = useCallback(() => {
         if (profiles.length <= 1) return;
         const currentIndex = profiles.findIndex(p => p.id === activeProfileId);
         const nextIndex = (currentIndex + 1) % profiles.length;
         setActiveProfileId(profiles[nextIndex].id);
-    };
+    }, [profiles, activeProfileId]);
 
-    const prevProfile = () => {
+    const prevProfile = useCallback(() => {
         if (profiles.length <= 1) return;
         const currentIndex = profiles.findIndex(p => p.id === activeProfileId);
         const prevIndex = (currentIndex - 1 + profiles.length) % profiles.length;
         setActiveProfileId(profiles[prevIndex].id);
-    };
+    }, [profiles, activeProfileId]);
+
+    const contextValue = useMemo(() => ({
+        profiles,
+        activeProfile,
+        activeProfileId,
+        addProfile,
+        updateProfile,
+        deleteProfile,
+        switchProfile,
+        nextProfile,
+        prevProfile
+    }), [profiles, activeProfile, activeProfileId, addProfile, updateProfile, deleteProfile, switchProfile, nextProfile, prevProfile]);
 
     return (
-        <ProfileContext.Provider value={{
-            profiles,
-            activeProfile,
-            activeProfileId,
-            addProfile,
-            updateProfile,
-            deleteProfile,
-            switchProfile,
-            nextProfile,
-            prevProfile
-        }}>
+        <ProfileContext.Provider value={contextValue}>
             {children}
         </ProfileContext.Provider>
     );
