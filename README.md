@@ -1,16 +1,52 @@
-# React + Vite
+# Mori: Life Battery & Wishes
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Mori** is a minimalist "Life Battery" application grounded in the Stoic philosophy of *Memento Mori*. It helps users visualize their life span, track time passing, and manage their bucket list.
 
-Currently, two official plugins are available:
+Now with **Multi-Profile Support**: Track the lives of your family, friends, and pets.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+*   **Multi-Profile System**: 
+    *   Create profiles for Humans and Pets.
+    *   Separate wishlists and lifespan settings for each profile.
+    *   Seamless switching with swipe gestures.
+*   **Visualizations**:
+    *   **Classic Battery**: The standard battery life indicator.
+    *   **Weeks Grid**: A detailed view of every week lived.
+    *   **Themes**: Pixel, Neon, Fluid, Trisolarans (Countdown), and more.
+*   **Wishes**: A prioritized bucket list to track life goals.
+*   **Stoicism**: Daily quotes and reminders of life's urgency.
+*   **Localization**: Support for 11 languages (English, Chinese, Japanese, etc.).
+*   **Privacy**: Local-first architecture. All data stays on the device.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+*   **Framework**: React + Vite
+*   **Mobile Engine**: Capacitor (iOS & Android)
+*   **Styling**: TailwindCSS
+*   **Animations**: Framer Motion
+*   **Icons**: Lucide React
+*   **State Management**: React Context + LocalStorage (Optimized)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Setup
+
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+
+2.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
+
+3.  **Build for Mobile**:
+    ```bash
+    npm run build
+    npx cap copy ios
+    npx cap open ios
+    ```
+
+## License
+
+Private Project. Copyright 2026.

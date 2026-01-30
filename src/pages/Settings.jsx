@@ -1,19 +1,26 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, ChevronRight, Globe, Palette, Clock, AlertTriangle, Lock, Sparkles, Star, Users, Plus, X } from "lucide-react";
+
+import { ArrowLeft, Check, ChevronRight, Globe, Palette, Clock, AlertTriangle, Lock, Sparkles, Star, Users, Plus, X, Headphones, Volume2, VolumeX, Volume1 } from "lucide-react";
 import { useLocalStorage } from "../hooks/use-local-storage";
 import { useTranslation, availableLanguages } from "../hooks/use-translation";
 import { useProfile } from "../contexts/ProfileContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
+import { useAudio } from "../contexts/AudioContext";
 import Paywall from "../components/Paywall";
 import { motion, AnimatePresence } from "framer-motion";
 import { triggerHaptic } from "../utils/haptics";
 import { ImpactStyle } from "@capacitor/haptics";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Settings() {
     const navigate = useNavigate();
     const { t, lang, setLang } = useTranslation();
     const { activeProfile, updateProfile, profiles, addProfile, switchProfile, deleteProfile, activeProfileId } = useProfile();
+    const { volume, setVolume, currentTrackId, selectTrack, isMuted, setIsMuted, tracks, enablePlayback } = useAudio();
+
+    useEffect(() => {
+        enablePlayback();
+    }, []);
 
     // Use profile data or fallbacks
     const theme = activeProfile?.theme || "classic";
@@ -243,6 +250,87 @@ export default function Settings() {
                     </div>
                 </div>
             )}
+
+            {/* Sound Settings */}
+            <section className="mb-8">
+                <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3 px-1">{t("settings.sound", "Sound")}</h2>
+                <div className="p-4 bg-neutral-900 rounded-2xl border border-neutral-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Headphones className="w-5 h-5 text-neutral-400" />
+                            <span className="font-medium text-sm">{t("settings.bgm", "Background Music")}</span>
+                        </div>
+                        <button
+                            onClick={() => setIsMuted(!isMuted)}
+                            className="p-2 rounded-full bg-neutral-800 hover:bg-neutral-700 transition-colors"
+                        >
+                            {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-neutral-400" />}
+                        </button>
+                    </div>
+
+                    {/* Volume Slider */}
+                    {!isMuted && (
+                        <div className="flex items-center gap-3 px-1">
+                            <Volume1 className="w-3 h-3 text-neutral-500" />
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                value={volume}
+                                onChange={(e) => setVolume(parseFloat(e.target.value))}
+                                className="flex-1 h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                            />
+                            <Volume2 className="w-3 h-3 text-neutral-500" />
+                        </div>
+                    )}
+
+                    {/* Track Selector */}
+                    <div className="grid grid-cols-2 gap-2">
+                        {tracks.map((track) => {
+                            const isLocked = !track.free && !isPro;
+                            const isSelected = currentTrackId === track.id;
+
+                            return (
+                                <button
+                                    key={track.id}
+                                    onClick={() => {
+                                        if (isLocked) {
+                                            setShowPaywall(true);
+                                        } else {
+                                            selectTrack(track.id);
+                                        }
+                                        triggerHaptic(ImpactStyle.Light);
+                                    }}
+                                    className={`relative p-3 rounded-xl border text-left transition-all ${isSelected
+                                        ? "bg-neutral-800 border-neutral-600 ring-1 ring-white/10"
+                                        : "bg-neutral-900/50 border-neutral-800 hover:bg-neutral-800"
+                                        }`}
+                                >
+                                    <div className="text-xs font-bold mb-0.5">{t(`track.${track.id}`)}</div>
+                                    <div className="text-[10px] text-neutral-500 capitalize">{t(`track.type.${track.type}`)}</div>
+
+                                    {/* Lock Icon */}
+                                    {isLocked && (
+                                        <div className="absolute top-2 right-2">
+                                            <Lock className="w-3 h-3 text-amber-500" />
+                                        </div>
+                                    )}
+
+                                    {/* Playing Indicator */}
+                                    {isSelected && !isMuted && (
+                                        <div className="absolute top-3 right-3 flex gap-0.5 items-end h-3">
+                                            <div className="w-0.5 bg-green-500 animate-[bounce_1s_infinite] h-2"></div>
+                                            <div className="w-0.5 bg-green-500 animate-[bounce_1.2s_infinite] h-3"></div>
+                                            <div className="w-0.5 bg-green-500 animate-[bounce_0.8s_infinite] h-1"></div>
+                                        </div>
+                                    )}
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+            </section>
 
             <section className="mb-8">
                 <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3 px-1">{t("settings.appearance")}</h2>

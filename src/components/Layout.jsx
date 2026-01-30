@@ -1,4 +1,4 @@
-import { useRef, useLayoutEffect } from "react";
+import { useRef, useLayoutEffect, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Dashboard from "../pages/Dashboard";
@@ -7,17 +7,24 @@ import Energy from "../pages/Energy";
 import { useTranslation } from "../hooks/use-translation";
 import { cn } from "../lib/utils";
 import { triggerHaptic } from "../utils/haptics";
+import { useAudio } from "../contexts/AudioContext";
 
 export default function Layout() {
     const { t } = useTranslation();
     const containerRef = useRef(null);
     const dashboardRef = useRef(null);
+    const { enablePlayback } = useAudio();
 
     // Initial scroll to Dashboard (Middle Page)
     useLayoutEffect(() => {
         if (dashboardRef.current) {
             dashboardRef.current.scrollIntoView({ behavior: "instant" });
         }
+    }, []);
+
+    // Enable BGM when Layout mounts (entering main app)
+    useEffect(() => {
+        enablePlayback();
     }, []);
 
     return (
