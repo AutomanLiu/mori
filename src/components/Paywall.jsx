@@ -61,7 +61,7 @@ export default function Paywall({ onClose }) {
 
                 <div className="text-center mt-4 mb-8">
                     <div className="text-4xl mb-2">💎</div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Unlock LifeBattery Pro</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2">Unlock Mori Pro</h2>
                     <p className="text-neutral-400 text-sm">Get access to all premium themes and support development.</p>
                 </div>
 
