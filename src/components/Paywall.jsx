@@ -104,7 +104,7 @@ export default function Paywall({ onClose }) {
                         </a>
                         <span>•</span>
                         <a
-                            href="https://github.com/YOUR_GITHUB_USERNAME/lifebattery/blob/main/PRIVACY.md"
+                            href="https://github.com/AutomanLiu/mori/blob/main/PRIVACY.md"
                             target="_blank"
                             rel="noreferrer"
                             className="underline"
