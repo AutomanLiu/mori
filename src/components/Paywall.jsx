@@ -61,7 +61,7 @@ export default function Paywall({ onClose }) {
 
                 <div className="text-center mt-4 mb-8">
                     <div className="text-4xl mb-2">💎</div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Unlock Pro</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2">Unlock LifeBattery Pro</h2>
                     <p className="text-neutral-400 text-sm">Get access to all premium themes and support development.</p>
                 </div>
 
@@ -86,9 +86,33 @@ export default function Paywall({ onClose }) {
                     Restore Purchases
                 </button>
 
-                <p className="text-[10px] text-neutral-600 text-center mt-4">
-                    Recurring billing. Cancel anytime.
-                </p>
+                {/* Legal Footer */}
+                <div className="mt-6 pt-4 border-t border-neutral-800">
+                    <p className="text-[10px] text-neutral-600 text-center leading-relaxed">
+                        Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.
+                        Your account will be charged for renewal within 24-hours prior to the end of the current period.
+                    </p>
+
+                    <div className="flex justify-center gap-4 mt-3 text-[10px] text-neutral-500">
+                        <a
+                            href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline"
+                        >
+                            Terms of Use (EULA)
+                        </a>
+                        <span>•</span>
+                        <a
+                            href="https://github.com/YOUR_GITHUB_USERNAME/lifebattery/blob/main/PRIVACY.md"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline"
+                        >
+                            Privacy Policy
+                        </a>
+                    </div>
+                </div>
             </div>
         </motion.div>
     );
