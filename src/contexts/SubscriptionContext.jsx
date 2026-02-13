@@ -4,7 +4,7 @@ import { Capacitor } from "@capacitor/core";
 
 const SubscriptionContext = createContext();
 
-// REPLACE WITH YOUR KEYS
+
 const API_KEYS = {
     ios: "appl_JNykmdTOgwDRdNrqcBNqnclECrt",
     android: "goog_REPLACE_WITH_YOUR_KEY"
@@ -15,56 +15,76 @@ export function SubscriptionProvider({ children }) {
     const [offerings, setOfferings] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const init = async () => {
+    const [error, setError] = useState(null);
+
+    const checkEntitlements = (customerInfo) => {
+        if (!customerInfo?.entitlements?.active) {
+            setIsPro(false);
+            return;
+        }
+
+        const activeEntitlements = Object.keys(customerInfo.entitlements.active);
+
+        const hasProAccess = activeEntitlements.some(id =>
+            id.toLowerCase() === "pro_access" ||
+            id.toLowerCase() === "mori pro" ||
+            id.toLowerCase() === "pro"
+        );
+
+        if (hasProAccess) {
+            setIsPro(true);
+        } else {
+            setIsPro(false);
+        }
+    };
+
+    const init = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            if (Capacitor.getPlatform() === 'web') {
+                setLoading(false);
+                return;
+            }
+
+            const apiKey = Capacitor.getPlatform() === 'ios' ? API_KEYS.ios : API_KEYS.android;
+
+            await Purchases.setLogLevel({ level: "ERROR" });
+            await Purchases.configure({ apiKey });
+
+            const customerInfo = await Purchases.getCustomerInfo();
+            checkEntitlements(customerInfo);
+
             try {
-                if (Capacitor.getPlatform() === 'web') {
-                    setLoading(false);
-                    return;
-                }
-
-                const apiKey = Capacitor.getPlatform() === 'ios' ? API_KEYS.ios : API_KEYS.android;
-
-                await Purchases.setLogLevel({ level: "DEBUG" }); // Enable debug logs
-                await Purchases.configure({ apiKey });
-
-                const customerInfo = await Purchases.getCustomerInfo();
-                checkEntitlements(customerInfo);
-
                 const offerings = await Purchases.getOfferings();
-                console.log("RevenueCat Offerings:", offerings); // Debug log
 
                 if (offerings.current && offerings.current.availablePackages.length > 0) {
                     setOfferings(offerings.current);
                 } else if (offerings.all && Object.keys(offerings.all).length > 0) {
-                    // Fallback: Use the first available offering found
                     const firstOfferingId = Object.keys(offerings.all)[0];
-                    console.log("Using fallback offering:", firstOfferingId);
                     setOfferings(offerings.all[firstOfferingId]);
                 } else {
-                    console.warn("No offerings found. Check RevenueCat configuration.");
+                    // No offerings available
                 }
-            } catch (error) {
-                console.error("RevenueCat Init Error:", error);
-            } finally {
-                setLoading(false);
+            } catch (offeringError) {
+                // Don't block app initialization on offerings error
             }
-        };
 
-        const checkEntitlements = (customerInfo) => {
-            if (customerInfo.entitlements.active["pro_access"]) {
-                setIsPro(true);
-            } else {
-                setIsPro(false);
-            }
-        };
+        } catch (error) {
+            setError(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        // Listen for updates (restores, purchases made outside app, etc.)
+    useEffect(() => {
+        init();
+
+        // Listen for updates
         Purchases.addCustomerInfoUpdateListener((info) => {
             checkEntitlements(info);
         });
-
-        init();
     }, []);
 
     const purchasePackage = async (packageToPurchase) => {
@@ -73,10 +93,10 @@ export function SubscriptionProvider({ children }) {
             checkEntitlements(customerInfo);
             return true;
         } catch (error) {
-            if (error.userCancelled) {
+            if (error.userCancelled || String(error.code) === "1" || (error.message && error.message.includes("cancelled"))) {
                 return false;
             }
-            console.error("Purchase Error:", error);
+
             throw error;
         }
     };
@@ -87,7 +107,7 @@ export function SubscriptionProvider({ children }) {
             checkEntitlements(customerInfo);
             return customerInfo;
         } catch (error) {
-            console.error("Restore Error:", error);
+
             throw error;
         }
     };
@@ -97,6 +117,8 @@ export function SubscriptionProvider({ children }) {
             isPro,
             offerings,
             loading,
+            error,
+            retryLoad: init,
             purchasePackage,
             restorePurchases
         }}>

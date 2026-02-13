@@ -6,22 +6,37 @@ import { ImpactStyle } from "@capacitor/haptics";
 import { useState } from "react";
 
 export default function Paywall({ onClose }) {
-    const { offerings, purchasePackage, restorePurchases } = useSubscription();
+    const { offerings, purchasePackage, restorePurchases, loading, error, retryLoad } = useSubscription();
     const [isPurchasing, setIsPurchasing] = useState(false);
 
     const handlePurchase = async () => {
-        if (!offerings?.availablePackages?.length) return;
+        if (!offerings?.availablePackages?.length) {
+            return;
+        }
 
         setIsPurchasing(true);
         try {
-            const pkg = offerings.availablePackages[0]; // Usually we select the first one (Monthly/Yearly)
+            const pkg = offerings.availablePackages[0];
+
             const success = await purchasePackage(pkg);
             if (success) {
                 triggerHaptic(ImpactStyle.Heavy);
+                // DEBUG: Verify Entitlement ID match
+                // Logic is inside SubscriptionContext, but we can't see it here easily without Context exposing it.
+                // Rely on Context to handle state, but checking if it worked:
                 if (onClose) onClose();
             }
         } catch (error) {
-            alert("Purchase failed: " + error.message);
+            // Ignore user cancellation errors (including string matching for safety)
+            const errorMessage = error.message || "";
+            if (error.code === 1 || error.userCancelled || errorMessage.includes("cancelled")) {
+                console.log("User cancelled purchase");
+                return;
+            }
+
+            // Only alert for real errors
+            alert("Purchase Failed: " + errorMessage);
+            console.error("Purchase failed:", error);
         } finally {
             setIsPurchasing(false);
         }
@@ -30,9 +45,14 @@ export default function Paywall({ onClose }) {
     const handleRestore = async () => {
         setIsPurchasing(true);
         try {
-            await restorePurchases();
-            alert("Purchases restored!");
-            if (onClose) onClose();
+            const customerInfo = await restorePurchases();
+            const activeEntitlements = Object.keys(customerInfo?.customerInfo?.entitlements?.active || customerInfo?.entitlements?.active || {});
+            if (activeEntitlements.length > 0) {
+                alert("Purchases restored successfully!");
+                if (onClose) onClose();
+            } else {
+                alert("No active subscription found. Please subscribe first.");
+            }
         } catch (error) {
             alert("Restore failed: " + error.message);
         } finally {
@@ -71,13 +91,47 @@ export default function Paywall({ onClose }) {
                     <FeatureItem text="Support Indie Developer" />
                 </div>
 
-                <button
-                    onClick={handlePurchase}
-                    disabled={isPurchasing || !currentPkg}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 font-bold text-white shadow-lg shadow-indigo-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
-                >
-                    {isPurchasing ? "Processing..." : `Subscribe for ${priceString} / Month`}
-                </button>
+                {/* Action Button Area */}
+                <div className="space-y-3">
+                    {loading ? (
+                        <button disabled className="w-full py-4 rounded-xl bg-neutral-800 text-neutral-400 font-bold flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin"></div>
+                            Loading...
+                        </button>
+                    ) : error ? (
+                        <div className="space-y-2">
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs text-center">
+                                {error.message || "Failed to load products"}
+                            </div>
+                            <button
+                                onClick={() => retryLoad && retryLoad()}
+                                className="w-full py-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold transition-all"
+                            >
+                                Retry
+                            </button>
+                        </div>
+                    ) : !currentPkg ? (
+                        <div className="space-y-2">
+                            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-500 text-xs text-center">
+                                No products found. Check configuration.
+                            </div>
+                            <button
+                                onClick={() => retryLoad && retryLoad()}
+                                className="w-full py-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold transition-all"
+                            >
+                                Retry
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handlePurchase}
+                            disabled={isPurchasing}
+                            className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 font-bold text-white shadow-lg shadow-indigo-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+                        >
+                            {isPurchasing ? "Processing..." : `Subscribe for ${priceString} / Month`}
+                        </button>
+                    )}
+                </div>
 
                 <button
                     onClick={handleRestore}

@@ -1,0 +1,84 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "C848D972",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6758321293",
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_developerTeamID" : "C84VD9LH9K",
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 792496757.33925295,
+    "_locale" : "en_US",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21909020",
+      "localizations" : [
+
+      ],
+      "name" : "Mori Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "0.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6758373816",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlock MORI Pro . Monthly subscription. Cancel anytime.",
+              "displayName" : "MORI Pro",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "开通 MORI Pro 会员，解锁全部高级功能 • 订阅为按月计费，可随时在账户设置中取消。",
+              "displayName" : "MORI Pro 会员",
+              "locale" : "zh_Hans"
+            }
+          ],
+          "productID" : "com.nanopop.mori.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "MORI Pro Monthly",
+          "subscriptionGroupID" : "21909020",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
